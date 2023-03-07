@@ -1,18 +1,12 @@
-import json
 import os
 import pickle
 import queue  # imported for using queue.Empty exception
-import shutil
 from datetime import datetime
 from multiprocessing import Process, Queue
 
-import pandas
-import pandas as pd
+import src.backpropogation.neural_stuff as neural
+from src import processing as pro
 
-import analysis as analysis
-import evolutionary_superclass as evo
-import neural_stuff as neural
-import processing as pro
 
 def train_backprop_beans(beans, iterations, layers_dims, multi=False):
     train_x, train_y, test_x, test_y = pro.split_data(beans)

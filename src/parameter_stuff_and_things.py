@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
-import ev_indiv as evi
+from src.evolving import ev_indiv as evi
+
 
 def init_parameters_no_indiv_mutation(dataShape, layersSize, sigma=10):
     parameters = {}

@@ -1,23 +1,10 @@
+from src import analysis
 
-import pickle
-import parameter_stuff_and_things as param
-import analysis
-import os
-import pickle
-import queue  # imported for using queue.Empty exception
-from datetime import datetime
-from multiprocessing import Process, Queue
-
-import evolutionary_superclass as evo
-import numpy as np
-import processing as pro
-import parameter_stuff_and_things as param
 import matplotlib.pylab as plt
 import numpy as np
 import pandas as pd
 import pickle
 from tqdm.auto import tqdm
-import analysis
 
 
 class ANN:
@@ -130,8 +117,8 @@ class ANN:
         self.layers_size.insert(0, data_x.shape[1])
 
         self.initialize_parameters()
-        old_parameters = self.parameters
-        new_parameters = self.parameters
+
+
 
         for loop in tqdm(range(n_iterations)):
             A, store = self.forward(data_x)
@@ -146,29 +133,11 @@ class ANN:
                     "db" + str(l)]
 
             self.costs.append(cost)
-            if 1==1:
-                accuracy = analysis.test_accuracy(self, data_x, target_out_y, loop)
+            if loop % 1 == 0:
+                analysis.test_accuracy(self, data_x, target_out_y, loop)
                 if self.use_test_set and self.test_set_x is not None and self.test_set_y is not None:
                     analysis.test_accuracy(self, self.test_set_x, self.test_set_y, loop, test_set=True)
                 # trim accuracy to 2 decimal places
-
-                filename = str.format("parameters_{0}_{1}.pkl", loop, str(accuracy)[:4])
-                with open('runs/' + filename, 'wb') as f:
-                    pickle.dump(self, f)
-
-                # find difference between old and new parameters
-                strParams = str(self.parameters)
-                # write to file
-                with open('runs/params.txt', 'a') as f:
-                    f.write(strParams + "")
-
-                print("accuracy: " + str(accuracy)[:4] + " %")
-
-                with open('runs/' + filename, 'rb') as f:
-                    model_final_ann = pickle.load(f)
-
-                print("Initial Test Accuracy: " + str(param.accuracy(model_final_ann.test_set_x, model_final_ann.test_set_y, model_final_ann.parameters, model_final_ann.layers_size)))
-
 
                 # print("saved parameters to file: " + filename)
 

@@ -4,9 +4,9 @@ import numpy as np
 from pandas import DataFrame
 from tqdm.auto import tqdm
 
-import analysis
+from src import analysis, parameter_stuff_and_things as param
+
 # import ev_indiv as indiv
-import parameter_stuff_and_things as param
 
 multithreading = True
 debugmode = False
@@ -149,7 +149,7 @@ class POPULATION:
 
             # self.sigma += 1 if self.counter > (self.sampling_frequency * (self.lambda_children / 5)) else -1
             # sorted_params = sorted(self.individuals, key=lambda x: param.fitness(self.data_x, self.data_y, x, self.layers_size), reverse=True)[0]
-        pickle.dump(returnModel, open("output/best_model.pkl", "wb"))
+        pickle.dump(returnModel, open("../../output/best_model.pkl", "wb"))
         return returnModel
 
 

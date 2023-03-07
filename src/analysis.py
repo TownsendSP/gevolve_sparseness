@@ -5,7 +5,7 @@ import pandas as pd
 import seaborn as sn
 from matplotlib import pyplot as plt
 
-import parameter_stuff_and_things as param
+from src import parameter_stuff_and_things as param
 
 
 def hist_of_freq_of_df_column(df, col_name):
@@ -159,8 +159,25 @@ def random_select(data, target, num):
     y = data[:, -1]
     return x, y
 
+def minimal_test_accuracy(model, data_x, target_out_y, completed_iterations, parameters=None, layers_size=None, test_set=False, confused_needed=True):
+    try:
+        predictions = model.predict(data_x, target_out_y)
+    except AttributeError:
+        predictions = param.predict_cheaty(data_x, target_out_y, parameters, layers_size)
+    # x_subset, y_subset = random_select(data_x, target_out_y, 100) if not test_set else (data_x, target_out_y)
+    # x_subset, y_subset = (data_x, target_out_y)
+    tp, tn, fp, fn = calcConfusionMatNums(predictions)
+    correct = [x for x in predictions.to_numpy().tolist() if x[0] == x[1]]
 
-def test_accuracy(model, data_x, target_out_y, completed_iterations, parameters=None, layers_size=None, test_set=False):
+    if test_set:
+        model.test_accuracy_df.loc[len(model.test_accuracy_df)] = \
+            [completed_iterations, len(correct) / len(predictions), tp, tn, fp, fn]
+    else:
+        model.train_accuracy_df.loc[len(model.train_accuracy_df)] = \
+            [completed_iterations, len(correct) / len(predictions), tp, tn, fp, fn]
+    return len(correct) / len(predictions)
+
+def test_accuracy(model, data_x, target_out_y, completed_iterations, parameters=None, layers_size=None, test_set=False, confused_needed=True):
     try:
         predictions = model.predict(data_x, target_out_y)
     except AttributeError:
@@ -280,9 +297,9 @@ def false_positives(predictions):
 
 def i_forgot_to_fix_the_graph():
     # %%
-    train_df = pd.read_csv("./megaRuns/average_training_accuracy.csv")
-    test_df = pd.read_csv("./megaRuns/average_testing_accuracy.csv")
-    old_df = pd.read_csv("data/hw_00_average_testing_accuracy.csv")
+    train_df = pd.read_csv("../megaRuns/average_training_accuracy.csv")
+    test_df = pd.read_csv("../megaRuns/average_testing_accuracy.csv")
+    old_df = pd.read_csv("../data/hw_00_average_testing_accuracy.csv")
     plt.figure(num='test')
     old_df = old_df[old_df['Iteration'] < len(train_df['Iteration'].to_numpy())]
     # smooth the data
@@ -318,7 +335,7 @@ def make_good_graph(test, train, num_runs, out_path):
     # out_path = "./runs/"
     # test_df = pd.read_csv("./megaRuns/average_testing_accuracy.csv")
     # train_df = pd.read_csv("./megaRuns/average_training_accuracy.csv")
-    old_df = pd.read_csv("data/hw_00_average_training_accuracy.csv")
+    old_df = pd.read_csv("../data/hw_00_average_training_accuracy.csv")
     plt.figure(num='test')
     plt.title('Accuracy over ' + str(num_runs) + ' runs')
 
@@ -368,8 +385,9 @@ def plot_graph_v4(test, train, num_runs, out_path):
     # out_path = "./runs/"
     # test_df = pd.read_csv("./megaRuns/average_testing_accuracy.csv")
     # train_df = pd.read_csv("./megaRuns/average_training_accuracy.csv")
-    hw0_df = pd.read_csv("data/hw_00_average_training_accuracy.csv")
-    hw1_df = pd.read_csv("data/hw_01_average_testing_accuracy.csv")
+    # hw_df = pd.read_csv("")
+    hw0_df = pd.read_csv("./data/hw_00_average_training_accuracy.csv")
+    hw1_df = pd.read_csv("./data/hw_01_average_testing_accuracy.csv")
 
     plt.figure(num='test')
     plt.title('Accuracy over ' + str(num_runs) + ' runs')

@@ -2,26 +2,21 @@ import numpy as np
 from pandas import DataFrame
 from tqdm.auto import tqdm
 
-import analysis
+from src import analysis, parameter_stuff_and_things as param
+
 # import ev_indiv as indiv
-import parameter_stuff_and_things as param
 
 multithreading = True
 debugmode = False
 
 
 class POPULATION:
-    def __init__(self, max_lim, mu_indivs, sigma, lambda_children, rate_change, sampling_frequency, layers_size,
-                 ind_mutations=False):
+    def __init__(self, max_lim, mu_indivs, sigma, lambda_children, layers_size):
         self.max_lim = max_lim
         self.mu_indivs = mu_indivs
         self.lambda_children = lambda_children
-        self.rate_change = rate_change
-        self.sampling_frequency = sampling_frequency
         self.layers_size = layers_size
         self.num_layers = len(self.layers_size)
-        self.sigma = np.tile(np.array(np.random.normal(loc=1, scale=sigma, size=self.num_layers + 1)).clip(0, 100),
-                             (self.mu_indivs, 1)) if ind_mutations else sigma
         self.individuals = []
         self.data_x = None
         self.data_y = None
@@ -38,18 +33,11 @@ class POPULATION:
         self.ind_mutations = ind_mutations
 
     def conception(self):
-        self.layers_size.insert(0, self.data_x.shape[1])
-        # print("Layers size: " + str(self.layers_size))
         for i in range(self.mu_indivs):
             # self.individuals.append(indiv.EVOLUTIONARY_UNIT(self.layers_size))
             self.individuals.append(param.init_parameters(self.data_x.shape[0], self.layers_size,
                                                           sigma=self.sigma[i] if self.ind_mutations else self.sigma))
 
-        # for i in range(len(self.individuals)):
-        #     # self.individuals[i].layers_size.insert(0, self.data_x.shape[1])
-        #     self.individuals[i].data_x = self.data_x
-        #     self.individuals[i].data_y = self.data_y
-        #     self.individuals[i].init_params_v2()
 
     def children_production(self, childid, unupdated):
         (self.offspring[childid]).parameters = unupdated.update_params(
@@ -106,8 +94,6 @@ class POPULATION:
                 self.individuals = sorted(family,
                                           key=lambda x: param.fitness(self.data_x, self.data_y, x, self.layers_size),
                                           reverse=True)
-                # self.individuals = sorted(family, key=lambda x: x.fitness())
-                # best = max(self.individuals, key=lambda x: param.fitness(self.data_x, self.data_y, x, self.layers_size))
                 best = self.individuals[0]
 
                 fit_arr = np.array(
@@ -167,12 +153,6 @@ class POPULATION:
                 # best = max(self.individuals, key=lambda x: param.fitness(self.data_x, self.data_y, x, self.layers_size))
                 best = self.individuals[0]
 
-                # if self.best_individual is not None:
-                #     if self.best_individual.fitness() > self.individuals[0].fitness():
-                #         self.best_individual = self.individuals[0].fitness()
-                # elif self.best_individual is None:
-                #     self.best_individual = self.individuals[0]
-                # self.best_individual = self.individuals[0]
                 fit_arr = np.array(
                     [param.fitness(self.data_x, self.data_y, x, self.layers_size) for x in self.individuals])
                 self.individuals = self.individuals[0:self.mu_indivs]
@@ -191,7 +171,7 @@ class POPULATION:
                 self.sigma = (1 - self.rate_change)
             elif self.counter > (self.sampling_frequency * (self.lambda_children / 5)):
                 self.sigma = (1 + self.rate_change)
-            # sorted_params = sorted(self.individuals, key=lambda x: param.fitness(self.data_x, self.data_y, x, self.layers_size), reverse=True)[0]
+
 
     def predict(self, data_x, target_out_y):
         # predict using the best individual
