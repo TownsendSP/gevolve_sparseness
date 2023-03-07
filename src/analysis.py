@@ -416,35 +416,62 @@ def plot_graph_v4(test, train, num_runs, out_path):
     plt.savefig(out_path, dpi=1000)
     plt.show()
 
-def simple_graph(test, train, num_runs, out_path):
-    # testing_average_df = pd.read_csv("./megaRuns/average_testing_accuracy.csv", header=0)
-    # training_average_df = pd.read_csv("./megaRuns/average_training_accuracy.csv", header=0)
+def plot_graph_comparison(test, train, naive, num_runs, out_path):
     train_df = train
     test_df = test
-    # %%
-    # num_runs = 10
-    # out_path = "./runs/"
-    # test_df = pd.read_csv("./megaRuns/average_testing_accuracy.csv")
-    # train_df = pd.read_csv("./megaRuns/average_training_accuracy.csv")
-    # hw_df = pd.read_csv("")
-
-
+    naive_df = naive
     plt.figure(num='test')
-    plt.title('Accuracy over ' + str(num_runs) + ' runs')
-
-    len(test_df['Iteration'].to_numpy()) - len(hw0_df['Iteration'].to_numpy())
-    plt.plot(test_df['Iteration'], test_df['Accuracy'], label="HW_02_Test")
-    plt.plot(train_df['Iteration'], train_df['Accuracy'], label="HW_02_Train")
-
-
-    # make the x axis logarithmic
+    plt.title('Sparse_Method_Comparison over ' + str(num_runs) + ' runs')
+    plt.plot(test_df['Iteration'], test_df['Accuracy'], label="Genetic_Test")
+    plt.plot(train_df['Iteration'], train_df['Accuracy'], label="Genetic_Train")
+    plt.plot(naive_df['Iteration'], naive_df['Accuracy'], label="Naive_Test")
     plt.xlabel('Iteration')
     plt.ylabel('Accuracy')
     plt.xlim(1, (max(test_df['Iteration'].to_numpy())))
-    # plt.ylim(0.48, 0.56)
-    print(max(test_df['Iteration'].to_numpy()))
-    # logaritmic scale
     plt.xscale('asinh')
     plt.legend()
     plt.savefig(out_path, dpi=1000)
     plt.show()
+
+def make_conf_mat(test):
+    test_tp, test_tn, test_fp, test_fn, test_positives, test_negatives = test.tail(1)['True Positives'].values[0], \
+    test.tail(1)['True Negatives'].values[0], test.tail(1)['False Positives'].values[0], \
+    test.tail(1)['False Negatives'].values[0], test.tail(1)['Positives'].values[0], test.tail(1)['Negatives'].values[0]
+
+    test_mat = [[test_positives + test_negatives, test_positives, test_negatives],
+                [test_positives, test_tp, test_fn],
+                [test_negatives, test_fp, test_tn]]
+    return test_mat
+
+def plot_conf_comparison(test, train, naive, out_path):
+    test_conf_mat = make_conf_mat(test)
+    test_df_conf_mat = pd.DataFrame(test_conf_mat, index=["Total", "Actual True", "Actual False"],
+                         columns=["Total", "Predicted True", "Predicted False"])
+    train_conf_mat = make_conf_mat(train)
+    train_df_conf_mat = pd.DataFrame(train_conf_mat, index=["Total", "Actual True", "Actual False"],
+                            columns=["Total", "Predicted True", "Predicted False"])
+
+    naive_conf_mat = make_conf_mat(naive)
+    naive_df_conf_mat = pd.DataFrame(naive_conf_mat, index=["Total", "Actual True", "Actual False"],
+                            columns=["Total", "Predicted True", "Predicted False"])
+
+
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
+    fig.suptitle('Confusion Matrix Comparison', fontsize=20)
+
+
+    # set figsize of all subplots to 10, 7
+    fig.set_figheight(7)
+    fig.set_figwidth(21)
+    ax1.set_title("Genetic_Train")
+    ax2.set_title("Genetic_Test")
+    ax3.set_title("Naive_Approach")
+    sn.heatmap(test_df_conf_mat, annot=True, annot_kws={"size": 16}, fmt='g', ax=ax1)
+    sn.heatmap(train_df_conf_mat, annot=True, annot_kws={"size": 16}, fmt='g', ax=ax2)
+    sn.heatmap(naive_df_conf_mat, annot=True, annot_kws={"size": 16}, fmt='g', ax=ax3)
+    # ax1.plot(sn.heatmap(test_df_conf_mat, annot=True, annot_kws={"size": 16}, fmt='g', ax=ax1))
+    # ax2.plot(sn.heatmap(train_df_conf_mat, annot=True, annot_kws={"size": 16}, fmt='g', ax=ax2))
+    # ax3.plot(sn.heatmap(naive_df_conf_mat, annot=True, annot_kws={"size": 16}, fmt='g', ax=ax3))
+    plt.savefig(out_path, dpi=1000)
+    plt.show()
+

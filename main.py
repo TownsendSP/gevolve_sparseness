@@ -10,6 +10,7 @@ from src import analysis as analysis, processing as pro
 from src.backpropogation import backprop as bprop
 from src.evolving import v1evolver as evo1
 from src.genetics import genetic_postprocessing as gpost
+from src.genetics import genetic_multiprocessor as gevo_multi
 
 
 # %%
@@ -112,40 +113,55 @@ def main():
     # rate_of_mutation = [0.05, 0.07, 0.1, 0.01]
     # sampling_frequency = 5
     layers_dims = [34, 1]
+    naive_train = gpost.produce_naive_mask(source_params, beans.drop(['Class'], axis=1), beans['Class'], layers_dims, num_iters)
+
+    gevolver = gevo_multi.EVOLVER(number_of_runs=number_of_runs, beans=beans, layers_dims=layers_dims, source_params=source_params, num_iters=num_iters, indivs_per_gen=indivs_per_gen, number_of_processes=8)
+    gevolver.multiprocessor()
+
+    # evo_v1_train(beans, number_of_runs, num_iters, indivs_per_gen, sigma, children_per_gen, rate_of_mutation, sampling_frequency, layers_dims)
+    # %%
+    # genetic = gevo.POPULATION(num_iters, indivs_per_gen, layers_dims, source_params)
+    # genetic.data_x, genetic.data_y, genetic.test_data_x, genetic.test_data_y = pro.split_data(beans)
+    # genetic.train_population()
+    # trimmed = genetic.best_individual
+    # trimmed.save("./runs/model_0.pkl")
+
+
+
+
 
     # %%
-    genetic = gevo.POPULATION(num_iters, indivs_per_gen, layers_dims, source_params)
-    genetic.data_x, genetic.data_y, genetic.test_data_x, genetic.test_data_y = pro.split_data(beans)
-    genetic.train_population()
-    trimmed = genetic.best_individual
-    trimmed.save("./runs/model_0.pkl")
-
-    # %%
 
 
+    # <editor-fold desc="Final_Analysis">
+    training_accuracies = load_csvs_to_df("run_training")
+    testing_accuracies = load_csvs_to_df("run_testing")
+    training_average_df = analysis.split_and_recombine(training_accuracies)
+    testing_average_df = analysis.split_and_recombine(testing_accuracies)
+    training_average_df.to_csv("./megaRuns/average_training_accuracy.csv", index=False)
+    testing_average_df.to_csv("./megaRuns/average_testing_accuracy.csv", index=False)
 
-
-    training_history = gpost.postprocess(genetic.best_history, source_params, genetic.data_x, genetic.data_y, layers_dims)
-    testing_history = gpost.postprocess(genetic.best_history, source_params, genetic.test_data_x, genetic.test_data_y, layers_dims)
-    training_accuracies = training_history
-    testing_accuracies = testing_history
-    testing_accuracies.to_csv("./runs/run_testing_accuracy.csv", index=False)
-
-
-
-    analysis.load_avg_df_to_conf_mat(training_accuracies, "./runs/training_conf_mat.png",
-                                     "Training Data Confusion Matrix")
-    analysis.load_avg_df_to_conf_mat(testing_accuracies, "./runs/testing_conf_mat.png",
-                                     "Testing Data Confusion Matrix")
-
-    analysis.plot_graph_v4(training_accuracies,
-                           testing_accuracies,
+    #
+    test_accuracy_df = pd.read_csv("./megaRuns/average_testing_accuracy.csv", header=0)
+    train_accuracy_df = pd.read_csv("./megaRuns/average_training_accuracy.csv", header=0)
+    # Graphing
+    analysis.plot_graph_comparison(train_accuracy_df,
+                           test_accuracy_df,
+                           naive_train,
                            number_of_runs,
-                           "./runs/Final_Graph_Dataset_comparison.png")
-
-    outputFileName = ".\\output\\Run_" + str(datetime.now()). \
+                           "./megaRuns/Final_Graph_Dataset_comparison.png")
+    analysis.plot_conf_comparison(train_accuracy_df,
+                           test_accuracy_df,
+                           naive_train,
+                           "./megaRuns/Final_Confused_Dataset_comparison.png")
+    # analysis.load_avg_df_to_conf_mat(train_accuracy_df, "./megaRuns/training_conf_mat.png",
+    #                                  "Training Data Confusion Matrix")
+    # analysis.load_avg_df_to_conf_mat(test_accuracy_df, "./megaRuns/testing_conf_mat.png",
+    #                                  "Testing Data Confusion Matrix")
+    outputFileName = ".\\output\\MegaRun_" + str(datetime.now()). \
         replace(" ", "_").replace(":", "-").replace(".", "-") + ".zip"
-    os.system("zip -r " + outputFileName + " .\\runs\\*")
+    os.system("zip -r " + outputFileName + " .\\megaRuns\\*")
+    # </editor-fold>
 
 
 # Press the green button in the gutter to run the script.

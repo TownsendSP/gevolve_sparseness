@@ -43,6 +43,8 @@ def arff_to_df(filename):
     df = pd.DataFrame(data)
     return df
 
+def drop_class_column(df):
+    return df['Class'], df.drop(['Class'], axis=1)
 
 def normalise_beans(bean_df):
     # classes to keep:

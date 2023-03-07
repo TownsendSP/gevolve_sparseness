@@ -28,7 +28,7 @@ def train(beans, runs, iterations, layers_dims, mu, source_params):
     genetic.train_population()
     pickle.dump(genetic.best_individual, open(output_subdirectory_train + "best_individual_run_" + str(runs) + ".pkl", "wb"))
     pickle.dump(genetic.best_history, open(output_subdirectory_train + "best_history_run_" + str(runs) + ".pkl", "wb"))
-    pickle.dump(genetic, open(output_subdirectory_train + "genetic_run_" + str(runs) + ".pkl", "wb")
+    pickle.dump(genetic, open(output_subdirectory_train + "genetic_run_" + str(runs) + ".pkl", "wb"))
     train_accuracy_df = gpost.postprocess(genetic.best_history, source_params, genetic.data_x, genetic.data_y, layers_dims)
     test_accuracy_df = gpost.postprocess(genetic.best_history, source_params, genetic.test_data_x, genetic.test_data_y, layers_dims)
 
@@ -36,7 +36,7 @@ def train(beans, runs, iterations, layers_dims, mu, source_params):
     test_accuracy_df.to_csv(output_subdirectory_train + "test_accuracy.csv", index=False)
 
 
-    return train_accuracy_df, test_accuracy_df, genetic.best_individual, genetic
+    return train_accuracy_df, test_accuracy_df, genetic.best_individual
 
 
 class EVOLVER:
@@ -66,9 +66,9 @@ class EVOLVER:
                 # self.training_accuracies[task] = training_df
                 # self.testing_accuracies.append(testing_df)
 
-                os.rename("../../megaRuns/runs/", "./megaRuns/runs_" + str(task))
-                if not os.path.exists("../../megaRuns/runs"):
-                    os.mkdir("../../megaRuns/runs")
+                os.rename("./megaRuns/runs/", "./megaRuns/runs_" + str(task))
+                if not os.path.exists("./megaRuns/runs"):
+                    os.mkdir("./megaRuns/runs")
                 training_df.to_csv("./megaRuns/run_training" + str(task) + "_accuracy.csv", index=False)
                 testing_df.to_csv("./megaRuns/run_testing" + str(task) + "_accuracy.csv", index=False)
                 pickle.dump(neural_net, open("./megaRuns/runs_" + str(task) + "/model_" + str(task) + ".pkl", "wb"))
