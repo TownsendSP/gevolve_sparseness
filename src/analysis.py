@@ -433,14 +433,30 @@ def plot_graph_comparison(test, train, naive, num_runs, out_path):
     plt.savefig(out_path, dpi=1000)
     plt.show()
 
+def plot_graph_comparison2(test, train, num_runs, out_path):
+    train_df = train
+    test_df = test
+    plt.figure(num='test')
+    plt.title('Sparse_Method_Comparison over ' + str(num_runs) + ' runs')
+    plt.plot(test_df['Iteration'], test_df['Accuracy'], label="Genetic_Test")
+    plt.plot(train_df['Iteration'], train_df['Accuracy'], label="Genetic_Train")
+    plt.xlabel('Iteration')
+    plt.ylabel('Accuracy')
+    plt.xlim(1, (max(test_df['Iteration'].to_numpy())))
+    plt.xscale('asinh')
+    plt.legend()
+    plt.savefig(out_path, dpi=1000)
+    plt.show()
+
+
 def make_conf_mat(test):
     test_tp, test_tn, test_fp, test_fn, test_positives, test_negatives = test.tail(1)['True Positives'].values[0], \
     test.tail(1)['True Negatives'].values[0], test.tail(1)['False Positives'].values[0], \
     test.tail(1)['False Negatives'].values[0], test.tail(1)['Positives'].values[0], test.tail(1)['Negatives'].values[0]
 
     test_mat = [[test_positives + test_negatives, test_positives, test_negatives],
-                [test_positives, test_tp, test_fn],
-                [test_negatives, test_fp, test_tn]]
+                [test_positives, test_tp, test_fp],
+                [test_negatives, test_fn, test_tn]]
     return test_mat
 
 def plot_conf_comparison(test, train, naive, out_path):
@@ -462,7 +478,7 @@ def plot_conf_comparison(test, train, naive, out_path):
 
     # set figsize of all subplots to 10, 7
     fig.set_figheight(7)
-    fig.set_figwidth(21)
+    fig.set_figwidth(24)
     ax1.set_title("Genetic_Train")
     ax2.set_title("Genetic_Test")
     ax3.set_title("Naive_Approach")

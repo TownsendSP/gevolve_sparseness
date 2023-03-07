@@ -104,8 +104,8 @@ def main():
     beanpath = "./data/DryBeanDataset/Dry_Bean_Dataset.arff"
     beans = pro.scale_replace_beans(pro.normalise_beans(pro.arff_to_df(beanpath)))
     source_params = pickle.load(open("./data/model_0.pkl", "rb"))
-    number_of_runs = 1
-    num_iters = 100
+    number_of_runs = 10
+    num_iters = 1100
     indivs_per_gen = 2
     # sigma = 0.5
     # children_per_gen = 20
@@ -145,9 +145,9 @@ def main():
     test_accuracy_df = pd.read_csv("./megaRuns/average_testing_accuracy.csv", header=0)
     train_accuracy_df = pd.read_csv("./megaRuns/average_training_accuracy.csv", header=0)
     # Graphing
-    analysis.plot_graph_comparison(train_accuracy_df,
+    analysis.plot_graph_comparison2(train_accuracy_df,
                            test_accuracy_df,
-                           naive_train,
+                           # naive_train,
                            number_of_runs,
                            "./megaRuns/Final_Graph_Dataset_comparison.png")
     analysis.plot_conf_comparison(train_accuracy_df,

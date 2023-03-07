@@ -70,7 +70,7 @@ class POPULATION:
         self.conception()
         prog_bar = tqdm(np.arange(self.max_lim))
         self.best_individual = sorted(self.individuals, key=lambda x: x.fitness, reverse=True)[0]
-        print(str.format("Initial Best Fitness: {0}", self.best_individual.fitness))
+        # print(str.format("Initial Best Fitness: {0}", self.best_individual.fitness))
         iter = 0
         for _ in prog_bar:
 

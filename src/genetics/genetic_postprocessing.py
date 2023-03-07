@@ -13,7 +13,7 @@ def apply_mask(gene, params):
 
 def postprocess(gene_array, params, data_x, data_y, layers_dims):
     brains = [apply_mask(gene_array[i], params) for i in range(len(gene_array))]
-    print(len(brains))
+    # print(len(brains))
     # accuracies = [param.accuracy(data_x, data_y, brains[i], layers_dims) for i in range(len(gene_array))]
     predictions = [param.predict_cheaty(data_x, data_y, brains[j], [16] + layers_dims) for j in range(len(brains))]
 #     create dataframe of i, accuracy pairs
@@ -38,9 +38,9 @@ def naive(model_final):
     return data
 
 def produce_naive_mask(model_final, data_x, data_y, layers_dims, iterations):
-    aaaaaaa = 1
+
     gene_array = [naive(model_final) for i in range(iterations)]
-    print(len(gene_array))
+    # print(len(gene_array))
     return postprocess(gene_array, model_final, data_x, data_y, [34, 1])
 
 
