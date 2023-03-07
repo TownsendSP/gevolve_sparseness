@@ -159,7 +159,9 @@ def random_select(data, target, num):
     y = data[:, -1]
     return x, y
 
-def minimal_test_accuracy(model, data_x, target_out_y, completed_iterations, parameters=None, layers_size=None, test_set=False, confused_needed=True):
+
+def minimal_test_accuracy(model, data_x, target_out_y, completed_iterations, parameters=None, layers_size=None,
+                          test_set=False, confused_needed=True):
     try:
         predictions = model.predict(data_x, target_out_y)
     except AttributeError:
@@ -177,7 +179,9 @@ def minimal_test_accuracy(model, data_x, target_out_y, completed_iterations, par
             [completed_iterations, len(correct) / len(predictions), tp, tn, fp, fn]
     return len(correct) / len(predictions)
 
-def test_accuracy(model, data_x, target_out_y, completed_iterations, parameters=None, layers_size=None, test_set=False, confused_needed=True):
+
+def test_accuracy(model, data_x, target_out_y, completed_iterations, parameters=None, layers_size=None, test_set=False,
+                  confused_needed=True):
     try:
         predictions = model.predict(data_x, target_out_y)
     except AttributeError:
@@ -355,6 +359,7 @@ def make_good_graph(test, train, num_runs, out_path):
     plt.savefig(out_path, dpi=1000)
     plt.show()
 
+
 def plot_graph_v3(test, train, num_runs, out_path):
     train_df = train
     test_df = test
@@ -374,6 +379,7 @@ def plot_graph_v3(test, train, num_runs, out_path):
     plt.legend()
     plt.savefig(out_path, dpi=1000)
     plt.show()
+
 
 def plot_graph_v4(test, train, num_runs, out_path):
     # testing_average_df = pd.read_csv("./megaRuns/average_testing_accuracy.csv", header=0)
@@ -397,6 +403,39 @@ def plot_graph_v4(test, train, num_runs, out_path):
     plt.plot(train_df['Iteration'], train_df['Accuracy'], label="HW_02_Train")
     plt.plot(hw0_df['Iteration'], hw0_df['Accuracy'], label="HW_00_Test")
     plt.plot(hw1_df['Iteration'], hw1_df['Accuracy'], label="HW_01_Test")
+
+    # make the x axis logarithmic
+    plt.xlabel('Iteration')
+    plt.ylabel('Accuracy')
+    plt.xlim(1, (max(test_df['Iteration'].to_numpy())))
+    # plt.ylim(0.48, 0.56)
+    print(max(test_df['Iteration'].to_numpy()))
+    # logaritmic scale
+    plt.xscale('asinh')
+    plt.legend()
+    plt.savefig(out_path, dpi=1000)
+    plt.show()
+
+def simple_graph(test, train, num_runs, out_path):
+    # testing_average_df = pd.read_csv("./megaRuns/average_testing_accuracy.csv", header=0)
+    # training_average_df = pd.read_csv("./megaRuns/average_training_accuracy.csv", header=0)
+    train_df = train
+    test_df = test
+    # %%
+    # num_runs = 10
+    # out_path = "./runs/"
+    # test_df = pd.read_csv("./megaRuns/average_testing_accuracy.csv")
+    # train_df = pd.read_csv("./megaRuns/average_training_accuracy.csv")
+    # hw_df = pd.read_csv("")
+
+
+    plt.figure(num='test')
+    plt.title('Accuracy over ' + str(num_runs) + ' runs')
+
+    len(test_df['Iteration'].to_numpy()) - len(hw0_df['Iteration'].to_numpy())
+    plt.plot(test_df['Iteration'], test_df['Accuracy'], label="HW_02_Test")
+    plt.plot(train_df['Iteration'], train_df['Accuracy'], label="HW_02_Train")
+
 
     # make the x axis logarithmic
     plt.xlabel('Iteration')
