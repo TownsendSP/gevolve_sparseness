@@ -82,7 +82,7 @@ def training_main():
     beanpath = "./data/DryBeanDataset/Dry_Bean_Dataset.arff"
     beans = pro.scale_replace_beans(pro.normalise_beans(pro.arff_to_df(beanpath)))
     number_of_runs = 1
-    num_iters = 1000
+    num_iters = 250
     indivs_per_gen = 16 * 34
     sigma = 0.5
     children_per_gen = 20
@@ -105,8 +105,8 @@ def main():
     beans = pro.scale_replace_beans(pro.normalise_beans(pro.arff_to_df(beanpath)))
     source_params = pickle.load(open("./data/model_0.pkl", "rb"))
     number_of_runs = 10
-    num_iters = 1100
-    indivs_per_gen = 2
+    num_iters = 1000
+    indivs_per_gen = 16 * 34 * 2
     # sigma = 0.5
     # children_per_gen = 20
     # rate_of_mutation = 0.05
@@ -115,7 +115,7 @@ def main():
     layers_dims = [34, 1]
     naive_train = gpost.produce_naive_mask(source_params, beans.drop(['Class'], axis=1), beans['Class'], layers_dims, num_iters)
 
-    gevolver = gevo_multi.EVOLVER(number_of_runs=number_of_runs, beans=beans, layers_dims=layers_dims, source_params=source_params, num_iters=num_iters, indivs_per_gen=indivs_per_gen, number_of_processes=8)
+    gevolver = gevo_multi.EVOLVER(number_of_runs=number_of_runs, beans=beans, layers_dims=layers_dims, source_params=source_params, num_iters=num_iters, indivs_per_gen=indivs_per_gen, number_of_processes=5)
     gevolver.multiprocessor()
 
     # evo_v1_train(beans, number_of_runs, num_iters, indivs_per_gen, sigma, children_per_gen, rate_of_mutation, sampling_frequency, layers_dims)
@@ -125,9 +125,6 @@ def main():
     # genetic.train_population()
     # trimmed = genetic.best_individual
     # trimmed.save("./runs/model_0.pkl")
-
-
-
 
 
     # %%

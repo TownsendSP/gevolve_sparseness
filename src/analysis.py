@@ -490,4 +490,3 @@ def plot_conf_comparison(test, train, naive, out_path):
     # ax3.plot(sn.heatmap(naive_df_conf_mat, annot=True, annot_kws={"size": 16}, fmt='g', ax=ax3))
     plt.savefig(out_path, dpi=1000)
     plt.show()
-

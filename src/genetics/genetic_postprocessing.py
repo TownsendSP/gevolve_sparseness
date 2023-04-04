@@ -45,6 +45,3 @@ def produce_naive_mask(model_final, data_x, data_y, layers_dims, iterations):
 
 
 
-
-
-

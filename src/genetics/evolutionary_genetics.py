@@ -73,21 +73,28 @@ class POPULATION:
         # print(str.format("Initial Best Fitness: {0}", self.best_individual.fitness))
         iter = 0
         for _ in prog_bar:
+            if self.best_individual.fitness > 0.998:
+                self.best_history.append(self.best_individual.genes)
+                print(str.format("Best Fitness: {0}", self.best_individual.fitness))
 
-            self.reproduce()
-            if self.best_individual.fitness < sorted(self.individuals, key=lambda x: x.fitness, reverse=True)[0].fitness:
-                self.best_individual = sorted(self.individuals, key=lambda x: x.fitness, reverse=True)[0]
             else:
-                self.individuals.append(self.best_individual)
 
-            self.best_history.append(self.best_individual.genes)
-            # analysis.test_accuracy(self, self.data_x, self.data_y, iter,
-            #                        parameters=self.best_individual.masked_params, layers_size=self.layers_size)
-            # analysis.test_accuracy(self, self.test_data_x, self.test_data_y, iter,
-            #                        parameters=self.best_individual.masked_params, layers_size=self.layers_size, test_set=True)
-            prog_bar.set_postfix( {'Best': self.best_individual.fitness, 'mu': self.mu_indivs})
+
+                self.reproduce()
+                if self.best_individual.fitness < sorted(self.individuals, key=lambda x: x.fitness, reverse=True)[0].fitness:
+                    self.best_individual = sorted(self.individuals, key=lambda x: x.fitness, reverse=True)[0]
+                else:
+                    self.individuals.append(self.best_individual)
+
+                self.best_history.append(self.best_individual.genes)
+                # analysis.test_accuracy(self, self.data_x, self.data_y, iter,
+                #                        parameters=self.best_individual.masked_params, layers_size=self.layers_size)
+                # analysis.test_accuracy(self, self.test_data_x, self.test_data_y, iter,
+                #                        parameters=self.best_individual.masked_params, layers_size=self.layers_size, test_set=True)
+                prog_bar.set_postfix( {'Best': self.best_individual.fitness, 'mu': self.mu_indivs})
 
             iter += 1
+
         return self.best_individual.masked_params
 
     def predict(self, data_x, target_out_y):
