@@ -76,12 +76,12 @@ class DIFFERENTIATOR:
                 # self.training_accuracies[task] = training_df
                 # self.testing_accuracies.append(testing_df)
 
-                os.rename("../../megaRuns/runs/", "./megaRuns/runs_" + str(task))
-                if not os.path.exists("../../megaRuns/runs"):
-                    os.mkdir("../../megaRuns/runs")
+                os.rename("./megaRuns/runs/", "./megaRuns/runs_" + str(task))
+                if not os.path.exists("./megaRuns/runs"):
+                    os.mkdir("./megaRuns/runs")
                 training_df.to_csv("./megaRuns/run_training" + str(task) + "_accuracy.csv", index=False)
                 testing_df.to_csv("./megaRuns/run_testing" + str(task) + "_accuracy.csv", index=False)
-                pickle.dump(neural_net, open("../../runs/run_model.pkl", "wb"))
+                pickle.dump(neural_net, open("./runs/run_model.pkl", "wb"))
                 pickle.dump(neural_net, open("./megaRuns/runs_" + str(task) + "/model_" + str(task) + ".pkl", "wb"))
                 results.put(True)
 
@@ -103,7 +103,7 @@ class DIFFERENTIATOR:
         for p in processes:
             # print("Joining process: " + str(p))
             p.join()
-        print("Processes Joined!")
+        # print("Processes Joined!")
 
         # while not results.empty():
         #     print(str.format("Results Queue size: {0}\n", results.qsize()))

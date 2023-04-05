@@ -34,9 +34,9 @@ class POPULATION:
         self.offspring = []
         self.counter = 0
         self.train_accuracy_df = DataFrame(
-            columns=['Iteration', 'Accuracy', 'True Positives', 'True Negatives', 'False Positives', 'False Negatives'])
+            columns=['Iteration', 'Accuracy', 'True Positives', 'True Negatives', 'False Positives', 'False Negatives', 'Positives', 'Negatives'])
         self.test_accuracy_df = DataFrame(
-            columns=['Iteration', 'Accuracy', 'True Positives', 'True Negatives', 'False Positives', 'False Negatives'])
+            columns=['Iteration', 'Accuracy', 'True Positives', 'True Negatives', 'False Positives', 'False Negatives', 'Positives', 'Negatives'])
         self.fitOverTime = []
         self.ind_mutations = ind_mutations
     #      check if rate_change is a list or a single value
@@ -87,16 +87,20 @@ class POPULATION:
         for _ in prog_bar:
             self.individuals.sort(key=lambda x: x.fitness(self.data_x, self.data_y), reverse=True)
             best = self.individuals[0]
-            self.rate_change = 1.1 - best.fitness()
+            worst = self.individuals[-1]
+            self.rate_change = 1.08 - best.fitness()
+            self.sampling_frequency = (int) (20/(best.fitness() * 10 + 0.01))
 
 
             # self.counter = 0
             #
 
             for n in range(self.mu_indivs):
-                if best.fitness() < 0.9985:
+                if best.fitness() < 0.995:
                     Xp = self.individuals[n]
                     secondary, aunt, uncle = self.findFamily(n)
+                    if best.fitness() < 0.8:
+                        secondary = best
                     mutated_secondary = secondary.add(uncle.diff(aunt).mul(self.rate_change))
                     self.offspring[n] = Xp.crossover(mutated_secondary, self.sampling_frequency, self.sigma)
 
@@ -104,6 +108,8 @@ class POPULATION:
 
             self.individuals = [self.offspring[i] if self.offspring[i].fitness(self.data_x, self.data_y) > self.individuals[i].fitness(self.data_x, self.data_y) else self.individuals[i] for i in range(self.mu_indivs)]
             fit_array = np.array([x.fitness() for x in self.individuals])
+            # the bottom 25% of the population will be replaced with new individuals
+            self.individuals = [self.individuals[i] if fit_array[i] > np.percentile(fit_array, 25) else indiv.EVOLUTIONARY_UNIT(self.layers_size) for i in range(self.mu_indivs)]
 
 
 
@@ -117,7 +123,7 @@ class POPULATION:
 
             # prog_bar.set_postfix({'Best': param.fitness(self.data_x, self.data_y, best, self.layers_size), 'tp': self.individuals[0].tp, 'tn': self.individuals[0].tn, 'fp': self.individuals[0].fp, 'fn': self.individuals[0].fn, 'mu': self.mu_indivs, 'fits_range': fit_arr.max() - fit_arr.min()})
             prog_bar.set_postfix(
-                {'Best': fit_array.max(),
+                {'Best': fit_array.max(), 'Worst': fit_array.min(),
                  'fits_range': fit_array.max() - fit_array.min(),
                  'Curr_Mutation_Rate': self.rate_change})
             iter += 1

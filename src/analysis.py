@@ -190,13 +190,14 @@ def test_accuracy(model, data_x, target_out_y, completed_iterations, parameters=
     # x_subset, y_subset = (data_x, target_out_y)
     tp, tn, fp, fn = calcConfusionMatNums(predictions)
     correct = [x for x in predictions.to_numpy().tolist() if x[0] == x[1]]
-
+    num_positives = len(predictions[predictions['Actual'] == 1])
+    num_negatives = len(predictions[predictions['Actual'] == 0])
     if test_set:
         model.test_accuracy_df.loc[len(model.test_accuracy_df)] = \
-            [completed_iterations, len(correct) / len(predictions), tp, tn, fp, fn]
+            [completed_iterations, len(correct) / len(predictions), tp, tn, fp, fn, num_positives, num_negatives]
     else:
         model.train_accuracy_df.loc[len(model.train_accuracy_df)] = \
-            [completed_iterations, len(correct) / len(predictions), tp, tn, fp, fn]
+            [completed_iterations, len(correct) / len(predictions), tp, tn, fp, fn, num_positives, num_negatives]
     return len(correct) / len(predictions)
 
 

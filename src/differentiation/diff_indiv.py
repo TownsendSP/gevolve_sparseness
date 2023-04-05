@@ -16,7 +16,7 @@ class EVOLUTIONARY_UNIT:
     def __str__(self):
         return str.format("layers_size: {0}\nnum_layers: {1}\nparameters shape: {2}", self.layers_size, self.num_layers, (self.parameters["W1"]).shape)
 
-    def initialize_parameters(self):
+    def init_params_standard(self):
         self.n = self.data_x.shape[0] if self.data_x is not None else None
         np.random.seed(1)
         for layer in range(1, len(self.layers_size)):
@@ -25,7 +25,7 @@ class EVOLUTIONARY_UNIT:
                                 self.layers_size[layer - 1]) / np.sqrt(self.layers_size[layer - 1])
             self.parameters["b" + str(layer)] = np.zeros((self.layers_size[layer], 1))
 
-    def init_params_v2(self, sigma=0.01):
+    def initialize_parameters(self, sigma=0.6):
         # self.layers_size.insert(0, self.data_x.shape[1])
         self.n = self.data_x.shape[0] if self.data_x is not None else None
 
