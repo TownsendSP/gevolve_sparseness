@@ -416,15 +416,17 @@ def plot_graph_v4(test, train, num_runs, out_path):
     plt.savefig(out_path, dpi=1000)
     plt.show()
 
-def plot_graph_comparison(test, train, naive, num_runs, out_path):
+def plot_graph_comparison(test, train, line1, line2, num_runs, out_path):
     train_df = train
     test_df = test
-    naive_df = naive
+    second_df = line2
+    naive_df = line1
     plt.figure(num='test')
     plt.title('Sparse_Method_Comparison over ' + str(num_runs) + ' runs')
-    plt.plot(test_df['Iteration'], test_df['Accuracy'], label="Genetic_Test")
-    plt.plot(train_df['Iteration'], train_df['Accuracy'], label="Genetic_Train")
-    plt.plot(naive_df['Iteration'], naive_df['Accuracy'], label="Naive_Test")
+    plt.plot(test_df['Iteration'], test_df['Accuracy'], label="HW_04_Test")
+    plt.plot(train_df['Iteration'], train_df['Accuracy'], label="HW_04_Training")
+    plt.plot(second_df['Iteration'], naive_df['Accuracy'], label="HW_02")
+    plt.plot(naive_df['Iteration'], naive_df['Accuracy'], label="HW_01")
     plt.xlabel('Iteration')
     plt.ylabel('Accuracy')
     plt.xlim(1, (max(test_df['Iteration'].to_numpy())))
@@ -479,9 +481,9 @@ def plot_conf_comparison(test, train, naive, out_path):
     # set figsize of all subplots to 10, 7
     fig.set_figheight(7)
     fig.set_figwidth(24)
-    ax1.set_title("Genetic_Train")
-    ax2.set_title("Genetic_Test")
-    ax3.set_title("Naive_Approach")
+    ax1.set_title("HW_04")
+    ax2.set_title("HW_01")
+    ax3.set_title("HW_02")
     sn.heatmap(test_df_conf_mat, annot=True, annot_kws={"size": 16}, fmt='g', ax=ax1)
     sn.heatmap(train_df_conf_mat, annot=True, annot_kws={"size": 16}, fmt='g', ax=ax2)
     sn.heatmap(naive_df_conf_mat, annot=True, annot_kws={"size": 16}, fmt='g', ax=ax3)

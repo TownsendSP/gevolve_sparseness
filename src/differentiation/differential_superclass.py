@@ -50,17 +50,15 @@ class POPULATION:
         # print("Layers size: " + str(self.layers_size))
         for i in range(self.mu_indivs):
             self.individuals.append(indiv.EVOLUTIONARY_UNIT(self.layers_size))
+        [x.initialize_parameters() for x in self.individuals]
             # self.individuals.append(param.init_parameters(self.data_x.shape[0], self.layers_size,
             #                                               sigma=self.sigma[i] if self.ind_mutations else self.sigma))
-
 
     def children_production(self, childid, unupdated):
         (self.offspring[childid]).parameters = unupdated.update_params(
             self.sigma if self.ind_mutations else self.sigma[childid % self.mu_indivs])
         if self.offspring[childid].fitness() > unupdated.fitness():
             self.counter += 1
-
-    # def biasedCrossover(self, primary, secondary):
 
 
     def findFamily(self, indiv_index):
@@ -79,22 +77,34 @@ class POPULATION:
     def train_population(self):
         returnModel = None
         self.conception()
+        # [x.fitness(self.data_x, self.data_y) for x in ]
+        best = self.individuals[0]
         self.offspring = [indiv.EVOLUTIONARY_UNIT(self.layers_size) for _ in range(self.mu_indivs)]
         prog_bar = tqdm(np.arange(self.max_lim))
         best = self.individuals[0]
+        best.fitness(self.data_x, self.data_y)
         iter = 0
         for _ in prog_bar:
+            self.individuals.sort(key=lambda x: x.fitness(self.data_x, self.data_y), reverse=True)
+            best = self.individuals[0]
+            self.rate_change = 1.1 - best.fitness()
+
+
             # self.counter = 0
             #
 
             for n in range(self.mu_indivs):
-                Xp = self.individuals[n]
-                secondary, aunt, uncle = self.findFamily(n)
-                mutated_secondary = secondary.add(uncle.diff(aunt).mul(self.rate_change))
-                self.offspring[n] = Xp.crossover(mutated_secondary, self.sampling_frequency, self.sigma)
+                if best.fitness() < 0.9985:
+                    Xp = self.individuals[n]
+                    secondary, aunt, uncle = self.findFamily(n)
+                    mutated_secondary = secondary.add(uncle.diff(aunt).mul(self.rate_change))
+                    self.offspring[n] = Xp.crossover(mutated_secondary, self.sampling_frequency, self.sigma)
+
+
 
             self.individuals = [self.offspring[i] if self.offspring[i].fitness(self.data_x, self.data_y) > self.individuals[i].fitness(self.data_x, self.data_y) else self.individuals[i] for i in range(self.mu_indivs)]
             fit_array = np.array([x.fitness() for x in self.individuals])
+
 
 
             analysis.test_accuracy(self, self.data_x, self.data_y, iter,
@@ -108,13 +118,14 @@ class POPULATION:
             # prog_bar.set_postfix({'Best': param.fitness(self.data_x, self.data_y, best, self.layers_size), 'tp': self.individuals[0].tp, 'tn': self.individuals[0].tn, 'fp': self.individuals[0].fp, 'fn': self.individuals[0].fn, 'mu': self.mu_indivs, 'fits_range': fit_arr.max() - fit_arr.min()})
             prog_bar.set_postfix(
                 {'Best': fit_array.max(),
-                 'fits_range': fit_array.max() - fit_array.min()})
+                 'fits_range': fit_array.max() - fit_array.min(),
+                 'Curr_Mutation_Rate': self.rate_change})
             iter += 1
 
 
 
-        pickle.dump(returnModel, open("../../output/best_model.pkl", "wb"))
-        return returnModel
+        pickle.dump(best, open("./megaRuns/best_model.pkl", "wb"))
+        return best
 
 
 

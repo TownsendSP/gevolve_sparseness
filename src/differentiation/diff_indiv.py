@@ -9,7 +9,7 @@ class EVOLUTIONARY_UNIT:
         self.num_layers = len(layers_size)-1
         self.data_x = data_x
         self.data_y = data_y
-        self.fitness = None
+        self.fitness_value = None
 
         self.n = self.data_x.shape[0] if self.data_x is not None else None
 
@@ -104,6 +104,8 @@ class EVOLUTIONARY_UNIT:
         return A, store
 
     def sigmoid(self, Z):
+        # clip z to -10, 10 to avoid overflow
+        Z = np.clip(Z, -10, 10)
         return 1 / (1 + np.exp(-Z))
 
     def predict(self, data_x, target_out_y):
@@ -139,13 +141,17 @@ class EVOLUTIONARY_UNIT:
         fn = predictions[(predictions['Actual'] == 1) & (predictions['Predicted'] == 0)]
         return len(tp), len(tn), len(fp), len(fn)
 
-    def fitness(self, xdata, ydata):
+    def fitness(self, xdata = None, ydata = None):
+        if xdata is not None and ydata is not None:
+            self.data_x = xdata
+            self.data_y = ydata
+
         if self.fitness_value is not None:
             return self.fitness_value
         else:
-            self.data_x = xdata
-            self.data_y = ydata
+
             self.fitness_value = self.accuracy()
+            # print(self.fitness_value)
             return self.fitness_value
 
         predictions = self.predict(self.data_x, self.data_y)
