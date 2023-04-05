@@ -11,6 +11,7 @@ from src.backpropogation import backprop as bprop
 from src.evolving import v1evolver as evo1
 from src.genetics import genetic_postprocessing as gpost
 from src.genetics import genetic_multiprocessor as gevo_multi
+from src.differentiation import differentiator as diff
 
 
 # %%
@@ -50,6 +51,10 @@ def setup_dirs():
     for file in os.listdir("./megaRuns"):
         if file.startswith("run_"):
             os.remove("./megaRuns/" + file)
+
+def diffTrain(beans, runs, iters, indivs, sigma, mutation, sampling, layersdims):
+    differ = diff.DIFFERENTIATOR(runs, iters, indivs, sigma, mutation, sampling, layersdims, beans, number_of_processes=4)
+    differ.multiprocessor()
 
 
 def final_analysis(number_of_runs):
@@ -107,11 +112,10 @@ def main():
     number_of_runs = 10
     num_iters = 1000
     indivs_per_gen = 16 * 34 * 2
-    # sigma = 0.5
-    # children_per_gen = 20
-    # rate_of_mutation = 0.05
-    # rate_of_mutation = [0.05, 0.07, 0.1, 0.01]
-    # sampling_frequency = 5
+    sigma = 0.5
+    rate_of_mutation = 0.05
+
+    sampling_frequency = 5
     layers_dims = [34, 1]
     naive_train = gpost.produce_naive_mask(source_params, beans.drop(['Class'], axis=1), beans['Class'], layers_dims, num_iters)
 

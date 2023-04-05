@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from src.evolving import ev_indiv as evi
+from src.differentiation import diff_indiv as evi
 
 
 def init_parameters_no_indiv_mutation(dataShape, layersSize, sigma=10):
@@ -11,6 +11,25 @@ def init_parameters_no_indiv_mutation(dataShape, layersSize, sigma=10):
                                                         size=(layersSize[layer], layersSize[layer - 1]))
         parameters["b" + str(layer)] = np.zeros((layersSize[layer], 1))
     return parameters
+
+def diff(primary, secondary):
+    # calculate vector difference between two parameters
+    new_params = primary.parameters.copy()
+    for layer in range(1, len(primary.layers_size)):
+        new_params["W" + str(layer)] = np.subtract(new_params["W" + str(layer)], secondary.parameters["W" + str(layer)])
+    return new_params
+
+def mult(primary, factor):
+    new_params = primary.parameters.copy()
+    for layer in range(1, len(primary.layers_size)):
+        new_params["W" + str(layer)] = np.multiply(new_params["W" + str(layer)], factor)
+    return new_params
+
+def add(primary, secondary):
+    new_params = primary.parameters.copy()
+    for layer in range(1, len(primary.layers_size)):
+        new_params["W" + str(layer)] = np.add(new_params["W" + str(layer)], secondary.parameters["W" + str(layer)])
+    return new_params
 
 
 def init_parameters(dataShape, layers_size, sigma=10):
