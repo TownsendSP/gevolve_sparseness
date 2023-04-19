@@ -5,7 +5,7 @@ from pandas import DataFrame
 from tqdm.auto import tqdm
 
 from src import analysis, parameter_stuff_and_things as param
-from src.differentiation import diff_indiv as indiv
+from src.particulates import particle as indiv
 import src.differentiation.diff_misc as mootils
 
 # import ev_indiv as indiv
@@ -51,7 +51,8 @@ class POPULATION:
         for i in range(self.mu_indivs):
             self.individuals.append(indiv.EVOLUTIONARY_UNIT(self.layers_size))
         self.individuals = [x.initialize_parameters() for x in self.individuals]
-        [x.fitness(self.data_x, self.data_y) for x in self.individuals]
+        [x.set_weights_and_rates(weights=self.sampling_frequency, rates=self.rate_change) for x in self.individuals]
+        # [x.fitness(self.data_x, self.data_y) for x in self.individuals]
             # self.individuals.append(param.init_parameters(self.data_x.shape[0], self.layers_size,
             #                                               sigma=self.sigma[i] if self.ind_mutations else self.sigma))
 
@@ -79,36 +80,21 @@ class POPULATION:
         returnModel = None
         self.conception()
         # [x.fitness(self.data_x, self.data_y) for x in ]
+
         best = self.individuals[0]
-        self.offspring = [indiv.EVOLUTIONARY_UNIT(self.layers_size) for _ in range(self.mu_indivs)]
+
+        # self.offspring = [indiv.EVOLUTIONARY_UNIT(self.layers_size) for _ in range(self.mu_indivs)]
         prog_bar = tqdm(np.arange(self.max_lim))
         best.fitness(self.data_x, self.data_y)
         iter = 0
         for _ in prog_bar:
             self.individuals.sort(key=lambda x: x.fitness_value, reverse=True)
             best = self.individuals[0]
-            self.rate_change = 1.08 - best.fitness(self.data_x, self.data_y)
-            self.sampling_frequency = (int) (20/( best.fitness(self.data_x, self.data_y) * 10 + 0.01))
+            # self.rate_change = 1.08 - best.fitness(self.data_x, self.data_y)
+            # self.sampling_frequency = (int) (20/( best.fitness(self.data_x, self.data_y) * 10 + 0.01))
             fit_array = np.array([x.fitness(self.data_x, self.data_y) for x in self.individuals])
-
-
             if best.fitness(self.data_x, self.data_y) < 0.9975:
-                for n in range(self.mu_indivs):
-                    Xp = self.individuals[n]
-                    secondary, aunt, uncle = self.findFamily(n)
-                    if best.fitness(self.data_x, self.data_y) < 0.8:
-                        secondary = best
-                    mutated_secondary = secondary.add(uncle.diff(aunt).mul(self.rate_change))
-                    self.offspring[n] = Xp.crossover(mutated_secondary, self.sampling_frequency, self.sigma)
-                self.individuals = [self.offspring[i] if self.offspring[i].fitness(self.data_x, self.data_y) > self.individuals[i].fitness(self.data_x, self.data_y) else self.individuals[i] for i in range(self.mu_indivs)]
-                fit_array = np.array([x.fitness(self.data_x, self.data_y) for x in self.individuals])
-
-                # <editor-fold desc="Replacing the bottom 25%">
-                replacements = [indiv.EVOLUTIONARY_UNIT(self.layers_size) for _ in range(self.mu_indivs - (int) (self.mu_indivs * 0.25))]
-                replacements = [x.initialize_parameters() for x in replacements]
-                self.individuals.sort(key=lambda x: x.fitness_value, reverse=True)
-                self.individuals = self.individuals[:(int) (self.mu_indivs * 0.75)] + replacements
-                # </editor-fold>
+                 [x.update_velocities(self.best_individual) for x in self.individuals]
 
 
             analysis.test_accuracy(self, self.data_x, self.data_y, iter,

@@ -12,6 +12,9 @@ from src.evolving import v1evolver as evo1
 from src.genetics import genetic_postprocessing as gpost
 from src.genetics import genetic_multiprocessor as gevo_multi
 from src.differentiation import differentiator as diff
+from src.particulates import particulator as pso
+
+
 
 
 # %%
@@ -53,8 +56,12 @@ def setup_dirs():
             os.remove("./megaRuns/" + file)
 
 def diffTrain(beans, runs, iters, indivs, sigma, mutation, sampling, layersdims):
-    differ = diff.DIFFERENTIATOR(runs, iters, indivs, sigma, mutation, sampling, layersdims, beans, number_of_processes=4)
+    differ = diff.DIFFERENTIATOR(runs, iters, indivs, sigma, mutation, sampling, layersdims, beans, number_of_processes=6)
     differ.multiprocessor()
+
+def psoTrain(beans, runs, iters, indivs, sigma, mutation, weights, layersdims):
+    psoer = pso.PARTICULATOR(runs, iters, indivs, sigma, mutation, weights, layersdims, beans, number_of_processes=6)
+    psoer.multiprocessor()
 
 
 def final_analysis(number_of_runs):
@@ -109,23 +116,22 @@ def main():
     beanpath = "./data/DryBeanDataset/Dry_Bean_Dataset.arff"
     beans = pro.scale_replace_beans(pro.normalise_beans(pro.arff_to_df(beanpath)))
     source_params = pickle.load(open("./data/model_0.pkl", "rb"))
-    number_of_runs = 5
-    num_iters = 100
-    indivs_per_gen = 10
+    number_of_runs = 10
+    num_iters = 1000
+    indivs_per_gen = 150
     sigma = 0.7
     rate_of_mutation = 0.5
 
-    sampling_frequency = 5
+    sampling_frequency =
     layers_dims = [34, 1]
     # naive_train = gpost.produce_naive_mask(source_params, beans.drop(['Class'], axis=1), beans['Class'], layers_dims, num_iters)
-    #
-    #
     # gevolver = gevo_multi.EVOLVER(number_of_runs=number_of_runs, beans=beans, layers_dims=layers_dims, source_params=source_params, num_iters=num_iters, indivs_per_gen=indivs_per_gen, number_of_processes=5)
-    # gevolver.multiprocessor()
-
-    diffTrain(beans, number_of_runs, num_iters, indivs_per_gen, sigma, rate_of_mutation, sampling_frequency, layers_dims)
-
+    #diffTrain(beans, number_of_runs, num_iters, indivs_per_gen, sigma, rate_of_mutation, sampling_frequency, layers_dims)
     # evo_v1_train(beans, number_of_runs, num_iters, indivs_per_gen, sigma, children_per_gen, rate_of_mutation, sampling_frequency, layers_dims)
+
+    psoTrain(beans, number_of_runs, num_iters, indivs_per_gen, sigma, rate_of_mutation, sampling_frequency, layers_dims)
+
+
     # %%
     # genetic = gevo.POPULATION(num_iters, indivs_per_gen, layers_dims, source_params)
     # genetic.data_x, genetic.data_y, genetic.test_data_x, genetic.test_data_y = pro.split_data(beans)

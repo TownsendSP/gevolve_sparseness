@@ -1,21 +1,82 @@
 import numpy as np
 import pandas as pd
 
+global sig
 
 class EVOLUTIONARY_UNIT:
     def __init__(self, layers_size, data_x=None, data_y=None):
         self.parameters = {}
+        self.velocities = {}
         self.layers_size = layers_size
         self.num_layers = len(layers_size)-1
         self.data_x = data_x
         self.data_y = data_y
         self.fitness_value = None
-        self.predictions_cache = None
+        self.sigma = 0.6
+        self.mutation_weights = [0.3, 0.3, 0.4]
 
+        self.mutation_rate = 0.1
+        best_params = {}
         self.n = self.data_x.shape[0] if self.data_x is not None else None
+
+
+
+    def set_weights_and_rates(self, weights, rates):
+        self.mutation_weights = weights
+        self.mutation_rate = rates
 
     def __str__(self):
         return str.format("layers_size: {0}\nnum_layers: {1}\nparameters shape: {2}", self.layers_size, self.num_layers, (self.parameters["W1"]).shape)
+
+    def select_data(self, n):
+        # select n random values from np arrs self.data_x and the corresponding values from self.data_y
+        #create a new data_x and data_y with the selected values
+        indices = np.random.choice(self.data_x.shape[0], n, replace=False)
+        data_x = np.array([self.data_x[i] for i in indices])
+        data_y = np.array([self.data_y[i] for i in indices])
+        return data_x, data_y
+
+    def init_params_zeroes(self):
+        for layer in range(1, len(self.layers_size)):
+            self.parameters["W" + str(layer)] = np.zeros((self.layers_size[layer], self.layers_size[layer - 1]))
+            self.parameters["b" + str(layer)] = np.zeros((self.layers_size[layer], 1))
+
+    def init_mut_mask(self, mutation_rate):
+        # randomly mutates n% of the weights and biases
+        for layer in range(1, len(self.layers_size)):
+            mask_mat = np.random.rand(*mut_mat.shape)<(1-mutation_rate)
+            mut_mat = np.random.normal(loc=0, scale=self.sigma, size=(self.layers_size[layer],self.layers_size[layer - 1]))
+            mut_mat[mask_mat] = 0
+            self.parameters["W" + str(layer)] = mut_mat
+
+    def mutate(self, mutation_rate):
+        # randomly mutates n% of the weights and biases
+        mutator = EVOLUTIONARY_UNIT(self.layers_size)
+        mutator.init_mut_mask(mutation_rate)
+        self += mutator
+
+
+    def update_velocities(self, global_best, mutation_rate):
+    #     performs three-parent weighted averaging recombination combined with random mutation to update velocities
+        w = self.mutation_weights
+
+        new_params = self * w[0] + global_best * w[1] + self.best_params * w[2]
+        new_params.mutate(mutation_rate)
+
+        # select 100 random values from self.data_x and the corresponding values from self.data_y
+
+        if new_params.fitness(self.select_data(100) > self.fitness_value):
+            new_fitness = new_params.fitness(self.data_x, self.data_y, override=True)
+            if new_fitness > self.fitness(self.data_x, self.data_y):
+                self.best_params = new_params
+                self.fitness_value = new_fitness
+                self.parameters = new_params.parameters
+
+    def init_best_params(self):
+        best = EVOLUTIONARY_UNIT(self.layers_size)
+        best.parameters = self.parameters.copy()
+        best.fitness(self.data_x, self.data_y)
+        return best
 
     def init_params_standard(self):
         self.n = self.data_x.shape[0] if self.data_x is not None else None
@@ -26,16 +87,19 @@ class EVOLUTIONARY_UNIT:
                                 self.layers_size[layer - 1]) / np.sqrt(self.layers_size[layer - 1])
             self.parameters["b" + str(layer)] = np.zeros((self.layers_size[layer], 1))
 
-    def initialize_parameters(self, sigma=0.6):
+    def initialize_parameters(self):
         # self.layers_size.insert(0, self.data_x.shape[1])
         self.n = self.data_x.shape[0] if self.data_x is not None else None
 
         for layer in range(1, len(self.layers_size)):
-            self.parameters["W" + str(layer)] = np.random.normal(loc=0, scale=sigma, size=(self.layers_size[layer],self.layers_size[layer - 1]))
+            self.parameters["W" + str(layer)] = np.random.normal(loc=0, scale=self.sigma, size=(self.layers_size[layer],self.layers_size[layer - 1]))
             # print("shape of W: ", self.parameters["W" + str(layer)].shape)
             self.parameters["b" + str(layer)] = np.zeros((self.layers_size[layer], 1))
-        return self
 
+        self.best_params = self.init_best_params()
+        self.fitness_value = self.best_params.fitness_value
+
+        return self
 
     def crossover(self, other, k, probBias):
         child = EVOLUTIONARY_UNIT(self.layers_size)
@@ -64,8 +128,7 @@ class EVOLUTIONARY_UNIT:
             difference.parameters["W" + str(layer)] -= other.parameters["W" + str(layer)]
         return difference
 
-
-    def mul(self, factor):
+    def __mul__(self, factor):
     #     multiplies every parameter in self by factor, returns new object
         product = EVOLUTIONARY_UNIT(self.layers_size)
         product.parameters = self.parameters.copy()
@@ -73,14 +136,18 @@ class EVOLUTIONARY_UNIT:
             product.parameters["W" + str(layer)] *= factor
         return product
 
-
-
-    def add(self, other):
-    #     adds every parameter in self by factor, returns new object
+    def __add__(self, other):
+        # adds every parameter in self by factor, returns new object
         sum = EVOLUTIONARY_UNIT(self.layers_size)
         sum.parameters = self.parameters.copy()
+        sporkThing = {}
+        if isinstance(other, EVOLUTIONARY_UNIT):
+            sporkThing = other.parameters
+        else:
+            sporkThing = other
+
         for layer in range(1, len(self.layers_size)):
-            sum.parameters["W" + str(layer)] += other.parameters["W" + str(layer)]
+            sum.parameters["W" + str(layer)] += sporkThing["W" + str(layer)]
         return sum
     # </editor-fold>
 
@@ -136,6 +203,7 @@ class EVOLUTIONARY_UNIT:
         return predictions_Result
     # </editor-fold>
 
+    # <editor-fold desc="Accuracy_Fitness">
     def accuracy(self, predictions=None):
         # x_subset, y_subset = random_select(data_x, target_out_y, 100) if not test_set else (data_x, target_out_y)
         # print(self.data_y)
@@ -152,9 +220,9 @@ class EVOLUTIONARY_UNIT:
         fn = predictions[(predictions['Actual'] == 1) & (predictions['Predicted'] == 0)]
         return len(tp), len(tn), len(fp), len(fn)
 
-    def fitness(self, xdata, ydata):
+    def fitness(self, xdata, ydata, override=False):
 
-        if self.fitness_value is not None:
+        if self.fitness_value is not None and not override:
             return self.fitness_value
         else:
             self.data_x = xdata
@@ -175,3 +243,4 @@ class EVOLUTIONARY_UNIT:
         # f1 = 2 * (precision * recall) / (precision + recall)
         # I need to ensure that the
         return accuracy
+    # </editor-fold>
