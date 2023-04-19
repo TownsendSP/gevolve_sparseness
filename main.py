@@ -116,7 +116,7 @@ def main():
     beanpath = "./data/DryBeanDataset/Dry_Bean_Dataset.arff"
     beans = pro.scale_replace_beans(pro.normalise_beans(pro.arff_to_df(beanpath)))
     source_params = pickle.load(open("./data/model_0.pkl", "rb"))
-    number_of_runs = 10
+    number_of_runs = 1
     num_iters = 1000
     indivs_per_gen = 30
     sigma = 0.7

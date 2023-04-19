@@ -81,39 +81,80 @@ class POPULATION:
         self.conception()
         # [x.fitness(self.data_x, self.data_y) for x in ]
 
+        self.individuals.sort(key=lambda x: x.fitness_value, reverse=True)
         best = self.individuals[0]
 
         # self.offspring = [indiv.EVOLUTIONARY_UNIT(self.layers_size) for _ in range(self.mu_indivs)]
         prog_bar = tqdm(np.arange(self.max_lim))
-        best.fitness(self.data_x, self.data_y)
+        best.fitness(self.data_x, self.data_y, override=True)
+        print("Initial fitness: " + str(best.fitness_value))
         iter = 0
         for _ in prog_bar:
             self.individuals.sort(key=lambda x: x.fitness_value, reverse=True)
-            best = self.individuals[0]
-            self.best_individual = best
+            self.best_individual = self.individuals[0]
+            # self.best_individual = best
             # self.rate_change = 1.08 - best.fitness(self.data_x, self.data_y)
             # self.sampling_frequency = (int) (20/( best.fitness(self.data_x, self.data_y) * 10 + 0.01))
             fit_array = np.array([x.fitness(self.data_x, self.data_y) for x in self.individuals])
-            if best.fitness(self.data_x, self.data_y) < 0.9975:
+            if self.best_individual.fitness(self.data_x, self.data_y) < 0.998:
                  [x.update_velocities(self.best_individual) for x in self.individuals]
+                 # self.individuals.sort(key=lambda x: x.fitness_value, reverse=True)
+                 # self.best_individual = self.individuals[0]
+                 # [x.update_velocities(self.best_individual) for x in self.individuals]
 
-
-            analysis.test_accuracy(self, self.data_x, self.data_y, iter,
-                                   parameters=best.parameters, layers_size=self.layers_size)
-            analysis.test_accuracy(self, self.test_data_x, self.test_data_y, iter,
-                                   parameters=best.parameters, layers_size=self.layers_size, test_set=True)
-
+            self.log_results_train(iter)
+            self.log_results_test(iter)
+            # analysis.test_accuracy(self, self.data_x, self.data_y, iter,
+            #                        parameters=self.best_individual.parameters, layers_size=self.layers_size)
+            # analysis.test_accuracy(self, self.test_data_x, self.test_data_y, iter,
+            #                        parameters=self.best_individual.parameters, layers_size=self.layers_size, test_set=True)
+            # get the following values from self.test_accuracy_df
+            tp = self.test_accuracy_df.iloc[iter]['True Positives']
+            tn = self.test_accuracy_df.iloc[iter]['True Negatives']
+            fp = self.test_accuracy_df.iloc[iter]['False Positives']
+            fn = self.test_accuracy_df.iloc[iter]['False Negatives']
             # prog_bar.set_postfix({'Best': param.fitness(self.data_x, self.data_y, best, self.layers_size), 'tp': self.individuals[0].tp, 'tn': self.individuals[0].tn, 'fp': self.individuals[0].fp, 'fn': self.individuals[0].fn, 'mu': self.mu_indivs, 'fits_range': fit_arr.max() - fit_arr.min()})
             prog_bar.set_postfix(
-                {'Best': fit_array.max(), 'Worst': fit_array.min(),
-                 'fits_range': fit_array.max() - fit_array.min(),
-                 'Curr_Mutation_Rate': self.rate_change})
-            iter += 1
+                {'Best': self.best_individual.fitness_value, 'Worst': fit_array.min(),
+                 'fits_range': self.best_individual.fitness_value - fit_array.min(),
+                 'tp': self.best_individual.tp,
+                    'tn': self.best_individual.tn,
+                    'fp': self.best_individual.fp,
+                    'fn': self.best_individual.fn,
+                    '1s': self.best_individual.tp + self.best_individual.fp,
+                    '0s': self.best_individual.tn + self.best_individual.fn,
+                    'mu': fit_array,
+                 })
 
+            iter += 1
+        self.best_individual.predict(self.data_x, self.data_y).to_csv("./megaRuns/best_predictions.csv")
         pickle.dump(best, open("./megaRuns/best_model.pkl", "wb"))
         return best
 
+    def log_results_train(self, iter):
+    #     train accuracy:
+        predictions = self.best_individual.predict(self.data_x, self.data_y)
+        correct = predictions[predictions['Actual'] == predictions['Predicted']]
+        tp = len(predictions[(predictions['Actual'] == 1) & (predictions['Predicted'] == 1)])
+        tn = len(predictions[(predictions['Actual'] == 0) & (predictions['Predicted'] == 0)])
+        fp = len(predictions[(predictions['Actual'] == 0) & (predictions['Predicted'] == 1)])
+        fn = len(predictions[(predictions['Actual'] == 1) & (predictions['Predicted'] == 0)])
+        num_positives = len(predictions[predictions['Predicted'] == 1])
+        num_negatives = len(predictions[predictions['Predicted'] == 0])
+        self.train_accuracy_df.loc[len(self.train_accuracy_df)] = \
+        [iter, len(correct) / len(predictions), tp, tn, fp, fn, num_positives, num_negatives]
 
+    def log_results_test(self, iter):
+        predictions = self.best_individual.predict(self.test_data_x, self.test_data_y)
+        correct = predictions[predictions['Actual'] == predictions['Predicted']]
+        tp = len(predictions[(predictions['Actual'] == 1) & (predictions['Predicted'] == 1)])
+        tn = len(predictions[(predictions['Actual'] == 0) & (predictions['Predicted'] == 0)])
+        fp = len(predictions[(predictions['Actual'] == 0) & (predictions['Predicted'] == 1)])
+        fn = len(predictions[(predictions['Actual'] == 1) & (predictions['Predicted'] == 0)])
+        num_positives = len(predictions[predictions['Predicted'] == 1])
+        num_negatives = len(predictions[predictions['Predicted'] == 0])
+        self.test_accuracy_df.loc[len(self.train_accuracy_df)] = \
+        [iter, len(correct) / len(predictions), tp, tn, fp, fn, num_positives, num_negatives]
 
     def predict(self, data_x, target_out_y):
         # predict using the best individual

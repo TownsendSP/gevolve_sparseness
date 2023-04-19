@@ -17,6 +17,10 @@ class EVOLUTIONARY_UNIT:
         self.mutation_rate = 0.1
         self.predictions_cache = [None, None]
         self.n = self.data_x.shape[0] if self.data_x is not None else None
+        self.tp = 0
+        self.tn = 0
+        self.fp = 0
+        self.fn = 0
 
     def set_weights_and_rates(self, weights, rates):
         self.mutation_weights = weights
@@ -133,6 +137,7 @@ class EVOLUTIONARY_UNIT:
         self.best_params = self.init_best_params()
         self.fitness_value = self.best_params.fitness_value
 
+
         return self
 
     def crossover(self, other, k, probBias):
@@ -189,8 +194,8 @@ class EVOLUTIONARY_UNIT:
         return 1 / (1 + np.exp(-Z))
 
     def predict(self, data_x, target_out_y, test=False):
-        if self.predictions_cache[1 if test else 0] is not None:
-            return self.predictions_cache[1 if test else 0]
+        # if self.predictions_cache[1 if test else 0] is not None and 0 == 1:
+        #     return self.predictions_cache[1 if test else 0]
         # A is the output of the last layer
         A, cache = self.forward(data_x)
         number_examples = data_x.shape[0]
@@ -204,7 +209,7 @@ class EVOLUTIONARY_UNIT:
                 predictions[0, i] = 0
                 my_predictions.append(0)
         predictions_Result = pd.DataFrame({'Actual': target_out_y, 'Predicted': my_predictions})
-        self.predictions_cache[1 if test else 0] = predictions_Result
+        # self.predictions_cache[1 if test else 0] = predictions_Result
         return predictions_Result
     # </editor-fold>
 
@@ -214,26 +219,37 @@ class EVOLUTIONARY_UNIT:
         # print(self.data_y)
         predictions = self.predict(self.data_x, self.data_y) if predictions is None else predictions
         correct = [x for x in predictions.to_numpy().tolist() if x[0] == x[1]]
+        tp = [x for x in predictions.to_numpy().tolist() if x[0] == 1 and x[1] == 1]
+
         accuracy = len(correct) / len(predictions)
+        # print("tp: ", len(tp))
+        self.get_conf_table_values(predictions)
         return accuracy
 
-    def get_conf_table_values(self):
-        predictions = self.predict(self.data_x, self.data_y)
-        tp = predictions[(predictions['Actual'] == 1) & (predictions['Predicted'] == 1)]
-        tn = predictions[(predictions['Actual'] == 0) & (predictions['Predicted'] == 0)]
-        fp = predictions[(predictions['Actual'] == 0) & (predictions['Predicted'] == 1)]
-        fn = predictions[(predictions['Actual'] == 1) & (predictions['Predicted'] == 0)]
-        return len(tp), len(tn), len(fp), len(fn)
+    def get_conf_table_values(self, predictions):
+        tp = [x for x in predictions.to_numpy().tolist() if x[0] == 1 and x[1] == 1]
+        tn = [x for x in predictions.to_numpy().tolist() if x[0] == 0 and x[1] == 0]
+        fp = [x for x in predictions.to_numpy().tolist() if x[0] == 0 and x[1] == 1]
+        fn = [x for x in predictions.to_numpy().tolist() if x[0] == 1 and x[1] == 0]
+        self.tp = len(tp)
+        self.tn = len(tn)
+        self.fp = len(fp)
+        self.fn = len(fn)
+
+
+
 
     def fitness(self, xdata, ydata, override=False):
 
         if self.fitness_value is not None and not override:
+        # if 0==1:
             return self.fitness_value
         else:
             self.data_x = xdata
             self.data_y = ydata
 
             self.fitness_value = self.accuracy()
+
             # print(self.fitness_value)
             return self.fitness_value
 
