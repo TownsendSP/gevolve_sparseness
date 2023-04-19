@@ -36,7 +36,7 @@ def backprop_train(beans, runs, iterations, layers_dims):
     training_average_df = analysis.split_and_recombine(training_accuracies)
     testing_average_df = analysis.split_and_recombine(testing_accuracies)
     training_average_df.to_csv("./megaRuns/average_training_accuracy.csv", index=False)
-    testing_average_df.to_csv("./megaRuns/average_testing_accuracy.csv", index=False)
+    testing_average_df.to_csv("./megaRuns/HW_04.csv", index=False)
     return training_average_df, testing_average_df
 
 def evo_v1_train(beans, runs, iterations, parent,sigma, spawn, mutation_rate, sampling_frequency, layers_dims):
@@ -60,7 +60,7 @@ def diffTrain(beans, runs, iters, indivs, sigma, mutation, sampling, layersdims)
     differ.multiprocessor()
 
 def psoTrain(beans, runs, iters, indivs, sigma, mutation, weights, layersdims):
-    psoer = pso.PARTICULATOR(runs, iters, indivs, sigma, mutation, weights, layersdims, beans, number_of_processes=6)
+    psoer = pso.MultiSwarm(runs, iters, indivs, sigma, mutation, weights, layersdims, beans, number_of_processes=6)
     psoer.multiprocessor()
 
 
@@ -70,10 +70,10 @@ def final_analysis(number_of_runs):
     training_average_df = analysis.split_and_recombine(training_accuracies)
     testing_average_df = analysis.split_and_recombine(testing_accuracies)
     training_average_df.to_csv("./megaRuns/average_training_accuracy.csv", index=False)
-    testing_average_df.to_csv("./megaRuns/average_testing_accuracy.csv", index=False)
+    testing_average_df.to_csv("./megaRuns/HW_04.csv", index=False)
     # # # </editor-fold>
     #
-    test_accuracy_df = pd.read_csv("./megaRuns/average_testing_accuracy.csv", header=0)
+    test_accuracy_df = pd.read_csv("past_data/HW_04.csv", header=0)
     train_accuracy_df = pd.read_csv("./megaRuns/average_training_accuracy.csv", header=0)
     # Graphing
     analysis.plot_graph_v4(train_accuracy_df,
@@ -118,18 +118,18 @@ def main():
     source_params = pickle.load(open("./data/model_0.pkl", "rb"))
     number_of_runs = 10
     num_iters = 1000
-    indivs_per_gen = 150
+    indivs_per_gen = 30
     sigma = 0.7
-    rate_of_mutation = 0.5
+    rate_of_mutation = 0.1
 
-    sampling_frequency =
+    recombination_weights = [0.5, 0.2, 0.3] # weights; [indiv, glob_best, self best]
     layers_dims = [34, 1]
     # naive_train = gpost.produce_naive_mask(source_params, beans.drop(['Class'], axis=1), beans['Class'], layers_dims, num_iters)
     # gevolver = gevo_multi.EVOLVER(number_of_runs=number_of_runs, beans=beans, layers_dims=layers_dims, source_params=source_params, num_iters=num_iters, indivs_per_gen=indivs_per_gen, number_of_processes=5)
     #diffTrain(beans, number_of_runs, num_iters, indivs_per_gen, sigma, rate_of_mutation, sampling_frequency, layers_dims)
     # evo_v1_train(beans, number_of_runs, num_iters, indivs_per_gen, sigma, children_per_gen, rate_of_mutation, sampling_frequency, layers_dims)
 
-    psoTrain(beans, number_of_runs, num_iters, indivs_per_gen, sigma, rate_of_mutation, sampling_frequency, layers_dims)
+    psoTrain(beans, number_of_runs, num_iters, indivs_per_gen, sigma, rate_of_mutation, recombination_weights, layers_dims)
 
 
     # %%
@@ -138,7 +138,6 @@ def main():
     # genetic.train_population()
     # trimmed = genetic.best_individual
     # trimmed.save("./runs/model_0.pkl")
-
 
     # %%
 
@@ -155,18 +154,21 @@ def main():
     test_accuracy_df = pd.read_csv("./megaRuns/average_testing_accuracy.csv", header=0)
     train_accuracy_df = pd.read_csv("./megaRuns/average_training_accuracy.csv", header=0)
     # Graphing
-    analysis.plot_graph_comparison(train_accuracy_df,
-                           test_accuracy_df,
-                                   pd.read_csv("./data/hw_02_average_training_accuracy.csv"),
-
-                                   pd.read_csv("./data/hw_01_average_testing_accuracy.csv"),
-
-                                   number_of_runs,
-                           "./megaRuns/Final_Graph_Dataset_comparison.png")
-    analysis.plot_conf_comparison(train_accuracy_df,
-                           pd.read_csv("./data/hw_01_average_testing_accuracy.csv"),
-                           pd.read_csv("./data/hw_02_average_training_accuracy.csv"),
-                           "./megaRuns/Final_Confused_Dataset_comparison.png")
+    analysis.plot_graph_multi([train_accuracy_df,
+                test_accuracy_df,
+                pd.read_csv("past_data/HW_02.csv"),
+                pd.read_csv("past_data/HW_01.csv"),
+                pd.read_csv("past_data/HW_04.csv")],
+                ["Training", "Testing", "HW_02", "HW_01", "HW_04"],
+                str.format("Training and Testing Accuracy for {} Runs", number_of_runs),
+                "./megaRuns/Final_Graph_Dataset_comparison.png")
+    analysis.plot_conf_multi([train_accuracy_df,
+                    test_accuracy_df,
+                    pd.read_csv("past_data/HW_01.csv"),
+                    pd.read_csv("past_data/HW_02.csv"),
+                    pd.read_csv("past_data/HW_04.csv")],
+                    ["Training", "Testing", "HW_01", "HW_02", "HW_04"],
+                    "./megaRuns/Final_Confused_Dataset_comparison.png")
     # analysis.load_avg_df_to_conf_mat(train_accuracy_df, "./megaRuns/training_conf_mat.png",
     #                                  "Training Data Confusion Matrix")
     # analysis.load_avg_df_to_conf_mat(test_accuracy_df, "./megaRuns/testing_conf_mat.png",

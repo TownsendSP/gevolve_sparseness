@@ -14,19 +14,49 @@ class EVOLUTIONARY_UNIT:
         self.fitness_value = None
         self.sigma = 0.6
         self.mutation_weights = [0.3, 0.3, 0.4]
-
         self.mutation_rate = 0.1
-        best_params = {}
+        self.predictions_cache = [None, None]
         self.n = self.data_x.shape[0] if self.data_x is not None else None
-
-
 
     def set_weights_and_rates(self, weights, rates):
         self.mutation_weights = weights
         self.mutation_rate = rates
 
+    # <editor-fold desc="MathStuff">
+    def diff(self, other):
+    #     calculates vector difference between self and other
+        difference = EVOLUTIONARY_UNIT(self.layers_size)
+        difference.parameters = self.parameters.copy()
+        for layer in range(1, len(self.layers_size)):
+            difference.parameters["W" + str(layer)] -= other.parameters["W" + str(layer)]
+        return difference
+
+    def __mul__(self, factor):
+    #     multiplies every parameter in self by factor, returns new object
+        product = EVOLUTIONARY_UNIT(self.layers_size)
+        product.parameters = self.parameters.copy()
+        for layer in range(1, len(self.layers_size)):
+            product.parameters["W" + str(layer)] *= factor
+        return product
+
+    def __add__(self, other):
+        # adds every parameter in self by factor, returns new object
+        sum = EVOLUTIONARY_UNIT(self.layers_size)
+        sum.parameters = self.parameters.copy()
+        sporkThing = {}
+        if isinstance(other, EVOLUTIONARY_UNIT):
+            sporkThing = other.parameters
+        else:
+            sporkThing = other
+
+        for layer in range(1, len(self.layers_size)):
+            sum.parameters["W" + str(layer)] += sporkThing["W" + str(layer)]
+        return sum
+    # </editor-fold>
+
     def __str__(self):
-        return str.format("layers_size: {0}\nnum_layers: {1}\nparameters shape: {2}", self.layers_size, self.num_layers, (self.parameters["W1"]).shape)
+        return str.format("layers_size: {0}\nnum_layers: {1}\nparameters shape: {2}\nfitness: {3}",
+                          self.layers_size, self.num_layers, self.parameters["W1"].shape, self.fitness_value)
 
     def select_data(self, n):
         # select n random values from np arrs self.data_x and the corresponding values from self.data_y
@@ -44,8 +74,8 @@ class EVOLUTIONARY_UNIT:
     def init_mut_mask(self, mutation_rate):
         # randomly mutates n% of the weights and biases
         for layer in range(1, len(self.layers_size)):
-            mask_mat = np.random.rand(*mut_mat.shape)<(1-mutation_rate)
             mut_mat = np.random.normal(loc=0, scale=self.sigma, size=(self.layers_size[layer],self.layers_size[layer - 1]))
+            mask_mat = np.random.rand(*mut_mat.shape)<(1-mutation_rate)
             mut_mat[mask_mat] = 0
             self.parameters["W" + str(layer)] = mut_mat
 
@@ -55,19 +85,23 @@ class EVOLUTIONARY_UNIT:
         mutator.init_mut_mask(mutation_rate)
         self += mutator
 
-
-    def update_velocities(self, global_best, mutation_rate):
+    def update_velocities(self, global_best):
+        mutation_rate = self.mutation_rate
     #     performs three-parent weighted averaging recombination combined with random mutation to update velocities
         w = self.mutation_weights
-
+        # print("w: ", w)
+        # print("self: ", self)
+        # print("global_best: ", global_best)
+        # print("self.best_params: ", self.best_params)
         new_params = self * w[0] + global_best * w[1] + self.best_params * w[2]
         new_params.mutate(mutation_rate)
 
         # select 100 random values from self.data_x and the corresponding values from self.data_y
-
-        if new_params.fitness(self.select_data(100) > self.fitness_value):
+        testx, testy = self.select_data(100)
+        if new_params.fitness(testx, testy, override=True) > self.fitness_value:
             new_fitness = new_params.fitness(self.data_x, self.data_y, override=True)
             if new_fitness > self.fitness(self.data_x, self.data_y):
+                self.predictions_cache = [None, None]
                 self.best_params = new_params
                 self.fitness_value = new_fitness
                 self.parameters = new_params.parameters
@@ -119,37 +153,7 @@ class EVOLUTIONARY_UNIT:
 
         return child
 
-    # <editor-fold desc="MathStuff">
-    def diff(self, other):
-    #     calculates vector difference between self and other
-        difference = EVOLUTIONARY_UNIT(self.layers_size)
-        difference.parameters = self.parameters.copy()
-        for layer in range(1, len(self.layers_size)):
-            difference.parameters["W" + str(layer)] -= other.parameters["W" + str(layer)]
-        return difference
 
-    def __mul__(self, factor):
-    #     multiplies every parameter in self by factor, returns new object
-        product = EVOLUTIONARY_UNIT(self.layers_size)
-        product.parameters = self.parameters.copy()
-        for layer in range(1, len(self.layers_size)):
-            product.parameters["W" + str(layer)] *= factor
-        return product
-
-    def __add__(self, other):
-        # adds every parameter in self by factor, returns new object
-        sum = EVOLUTIONARY_UNIT(self.layers_size)
-        sum.parameters = self.parameters.copy()
-        sporkThing = {}
-        if isinstance(other, EVOLUTIONARY_UNIT):
-            sporkThing = other.parameters
-        else:
-            sporkThing = other
-
-        for layer in range(1, len(self.layers_size)):
-            sum.parameters["W" + str(layer)] += sporkThing["W" + str(layer)]
-        return sum
-    # </editor-fold>
 
 
     # <editor-fold desc="Code for Prediction">
@@ -184,9 +188,9 @@ class EVOLUTIONARY_UNIT:
         Z = np.clip(Z, -10, 10)
         return 1 / (1 + np.exp(-Z))
 
-    def predict(self, data_x, target_out_y):
-        if self.predictions_cache is not None:
-            return self.predictions_cache
+    def predict(self, data_x, target_out_y, test=False):
+        if self.predictions_cache[1 if test else 0] is not None:
+            return self.predictions_cache[1 if test else 0]
         # A is the output of the last layer
         A, cache = self.forward(data_x)
         number_examples = data_x.shape[0]
@@ -200,6 +204,7 @@ class EVOLUTIONARY_UNIT:
                 predictions[0, i] = 0
                 my_predictions.append(0)
         predictions_Result = pd.DataFrame({'Actual': target_out_y, 'Predicted': my_predictions})
+        self.predictions_cache[1 if test else 0] = predictions_Result
         return predictions_Result
     # </editor-fold>
 

@@ -49,7 +49,7 @@ class POPULATION:
         self.layers_size.insert(0, self.data_x.shape[1])
         # print("Layers size: " + str(self.layers_size))
         for i in range(self.mu_indivs):
-            self.individuals.append(indiv.EVOLUTIONARY_UNIT(self.layers_size))
+            self.individuals.append(indiv.EVOLUTIONARY_UNIT(self.layers_size, self.data_x, self.data_y))
         self.individuals = [x.initialize_parameters() for x in self.individuals]
         [x.set_weights_and_rates(weights=self.sampling_frequency, rates=self.rate_change) for x in self.individuals]
         # [x.fitness(self.data_x, self.data_y) for x in self.individuals]
@@ -90,6 +90,7 @@ class POPULATION:
         for _ in prog_bar:
             self.individuals.sort(key=lambda x: x.fitness_value, reverse=True)
             best = self.individuals[0]
+            self.best_individual = best
             # self.rate_change = 1.08 - best.fitness(self.data_x, self.data_y)
             # self.sampling_frequency = (int) (20/( best.fitness(self.data_x, self.data_y) * 10 + 0.01))
             fit_array = np.array([x.fitness(self.data_x, self.data_y) for x in self.individuals])

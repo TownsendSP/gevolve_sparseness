@@ -303,8 +303,8 @@ def false_positives(predictions):
 def i_forgot_to_fix_the_graph():
     # %%
     train_df = pd.read_csv("../megaRuns/average_training_accuracy.csv")
-    test_df = pd.read_csv("../megaRuns/average_testing_accuracy.csv")
-    old_df = pd.read_csv("../data/hw_00_average_testing_accuracy.csv")
+    test_df = pd.read_csv("../past_data/HW_04.csv")
+    old_df = pd.read_csv("../past_data/HW_00.csv")
     plt.figure(num='test')
     old_df = old_df[old_df['Iteration'] < len(train_df['Iteration'].to_numpy())]
     # smooth the data
@@ -331,14 +331,14 @@ def i_forgot_to_fix_the_graph():
 
 
 def make_good_graph(test, train, num_runs, out_path):
-    # testing_average_df = pd.read_csv("./megaRuns/average_testing_accuracy.csv", header=0)
+    # testing_average_df = pd.read_csv("./megaRuns/HW_04.csv", header=0)
     # training_average_df = pd.read_csv("./megaRuns/average_training_accuracy.csv", header=0)
     train_df = train
     test_df = test
     # %%
     # num_runs = 10
     # out_path = "./runs/"
-    # test_df = pd.read_csv("./megaRuns/average_testing_accuracy.csv")
+    # test_df = pd.read_csv("./megaRuns/HW_04.csv")
     # train_df = pd.read_csv("./megaRuns/average_training_accuracy.csv")
     old_df = pd.read_csv("../data/hw_00_average_training_accuracy.csv")
     plt.figure(num='test')
@@ -383,18 +383,18 @@ def plot_graph_v3(test, train, num_runs, out_path):
 
 
 def plot_graph_v4(test, train, num_runs, out_path):
-    # testing_average_df = pd.read_csv("./megaRuns/average_testing_accuracy.csv", header=0)
+    # testing_average_df = pd.read_csv("./megaRuns/HW_04.csv", header=0)
     # training_average_df = pd.read_csv("./megaRuns/average_training_accuracy.csv", header=0)
     train_df = train
     test_df = test
     # %%
     # num_runs = 10
     # out_path = "./runs/"
-    # test_df = pd.read_csv("./megaRuns/average_testing_accuracy.csv")
+    # test_df = pd.read_csv("./megaRuns/HW_04.csv")
     # train_df = pd.read_csv("./megaRuns/average_training_accuracy.csv")
     # hw_df = pd.read_csv("")
     hw0_df = pd.read_csv("./data/hw_00_average_training_accuracy.csv")
-    hw1_df = pd.read_csv("./data/hw_01_average_testing_accuracy.csv")
+    hw1_df = pd.read_csv("./data/HW_01.csv")
 
     plt.figure(num='test')
     plt.title('Accuracy over ' + str(num_runs) + ' runs')
@@ -417,20 +417,20 @@ def plot_graph_v4(test, train, num_runs, out_path):
     plt.savefig(out_path, dpi=1000)
     plt.show()
 
-def plot_graph_comparison(test, train, line1, line2, num_runs, out_path):
-    train_df = train
-    test_df = test
-    second_df = line2
-    naive_df = line1
+def plot_graph_comparison(line1, line2, line3, line4, num_runs, out_path, title):
+    line1 = line1
+    line2 = line2
+    line3 = line3
+    line4 = line4
     plt.figure(num='test')
     plt.title('Sparse_Method_Comparison over ' + str(num_runs) + ' runs')
-    plt.plot(test_df['Iteration'], test_df['Accuracy'], label="HW_04_Test")
-    plt.plot(train_df['Iteration'], train_df['Accuracy'], label="HW_04_Training")
-    plt.plot(second_df['Iteration'], naive_df['Accuracy'], label="HW_02")
-    plt.plot(naive_df['Iteration'], naive_df['Accuracy'], label="HW_01")
+    plt.plot(line1['Iteration'], line1['Accuracy'], label="HW_04_Test")
+    plt.plot(line2['Iteration'], line2['Accuracy'], label="HW_04_Training")
+    plt.plot(line4['Iteration'], line3['Accuracy'], label="HW_02")
+    plt.plot(line3['Iteration'], line3['Accuracy'], label="HW_01")
     plt.xlabel('Iteration')
     plt.ylabel('Accuracy')
-    plt.xlim(1, (max(test_df['Iteration'].to_numpy())))
+    plt.xlim(1, (max(line1['Iteration'].to_numpy())))
     plt.xscale('asinh')
     plt.legend()
     plt.savefig(out_path, dpi=1000)
@@ -491,5 +491,38 @@ def plot_conf_comparison(test, train, naive, out_path):
     # ax1.plot(sn.heatmap(test_df_conf_mat, annot=True, annot_kws={"size": 16}, fmt='g', ax=ax1))
     # ax2.plot(sn.heatmap(train_df_conf_mat, annot=True, annot_kws={"size": 16}, fmt='g', ax=ax2))
     # ax3.plot(sn.heatmap(naive_df_conf_mat, annot=True, annot_kws={"size": 16}, fmt='g', ax=ax3))
+    plt.savefig(out_path, dpi=1000)
+    plt.show()
+
+
+def plot_graph_multi(lines, labels, title, out_path):
+    plt.figure(num='test')
+    plt.title(title)
+    for i, line in enumerate(lines):
+        plt.plot(line['Iteration'], line['Accuracy'], label=labels[i])
+    plt.xlabel('Iteration')
+    plt.ylabel('Accuracy')
+    plt.xlim(1, (max(lines[0]['Iteration'].to_numpy())))
+    plt.xscale('asinh')
+    plt.legend()
+    plt.savefig(out_path, dpi=1000)
+    plt.show()
+
+
+def plot_conf_multi(datasets, titles, out_path):
+    fig, axes = plt.subplots(1, len(datasets))
+    fig.suptitle('Confusion Matrix Comparison', fontsize=20)
+
+    # set figsize of all subplots to 10, 7
+    fig.set_figheight(7)
+    fig.set_figwidth(4 * len(datasets))
+
+    for i, dataset in enumerate(datasets):
+        conf_mat = pd.DataFrame(make_conf_mat(dataset), index=["Total", "Actual True", "Actual False"],
+                                columns=["Total", "Predicted True", "Predicted False"])
+        ax = axes[i]
+        ax.set_title(titles[i])
+        sn.heatmap(conf_mat, annot=True, annot_kws={"size": 16}, fmt='g', ax=ax)
+
     plt.savefig(out_path, dpi=1000)
     plt.show()
